@@ -41,11 +41,17 @@ slack run --app A0CBQ8FT3ND --team T0CBL7S7MM4
 
 `slack run`は実行している端末上で動作します。24時間稼働には常時起動するサーバーが必要です。
 
-## Herokuで常駐
+## Renderで常駐
 
-[Heroku学生特典](https://www.heroku.com/github-students/signup)の適用を確認してから、[Herokuへ配置](https://heroku.com/deploy?template=https://github.com/Arceus-S5/iinerankingbot)を開きます。トークン2つと利用者のメンバーIDを入力してください。
+1. Renderの「New → Web Service」でこのGitHubリポジトリの`main`を選びます。
+2. RuntimeはNode、Build Commandは`npm ci --omit=dev`、Start Commandは`npm start`、Instance Typeは**Free**にします。
+3. Environmentに`SLACK_BOT_TOKEN`、`SLACK_APP_TOKEN`、`SLACK_ALLOWED_USER_IDS`を設定します。`NODE_VERSION=24`も設定してください。`PORT`はRenderが自動設定します。
+4. Deploy後、`https://自分のサービス.onrender.com/healthz`で`ok`が返ることを確認します。Health Check Pathも`/healthz`に設定します。
+5. [Google Apps Script](https://script.google.com/)で新しいプロジェクトを作り、`gas/keepalive.gs`を貼り付けます。`HEALTH_URL`を自分のURLに変更し、`setupKeepalive`を一度実行して権限を許可します。
 
-Basicのworkerを1台起動します（月7米ドル・学生クレジット適用対象）。Webサーバー・DBの追加は不要です。トークンはHerokuの設定画面に入力します。
+GASが5分おきにアクセスします。GAS自体のWebアプリ公開は不要です。停止する場合はGASの「トリガー」から`pingBot`を削除します。
+
+Blueprintを使う場合は`render.yaml`も利用できます。無料枠は月750時間をワークスペース内で共有します。再起動・スリープやGASの実行遅延はあり、完全な無停止は保証されません。`/healthz`はプロセスの応答確認用で、Slack接続や集計の正常性を保証しません。
 
 ## 集計範囲
 

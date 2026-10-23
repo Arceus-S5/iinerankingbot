@@ -4,6 +4,7 @@ import { createApi, slackErrorCode } from './api.js';
 import { scanWorkspace } from './scanner.js';
 import { formatFailure, formatProgress, formatRanking } from './format.js';
 import { rankingRequest } from './ranking.js';
+import { startHealthServer } from './health.js';
 
 const { App, LogLevel } = bolt;
 let config;
@@ -13,7 +14,7 @@ try {
   console.error(error.message);
   process.exit(1);
 }
-// Bolt is the Slack app framework; no Hubot, custom server, or public HTTP endpoint.
+// Bolt handles Slack events; the optional HTTP server only serves process health.
 const app = new App({
   token: config.botToken, appToken: config.appToken, socketMode: true,
   logLevel: LogLevel.ERROR,
@@ -22,6 +23,7 @@ const app = new App({
 const call = createApi(app.client);
 let running;
 let stopping = false;
+let healthServer;
 
 async function runRanking({ userId, channelId, announce, reply, preflightReply = reply }) {
   if (!config.allowedUserIds.has(userId)) {
@@ -107,6 +109,7 @@ app.error(async () => { console.error('Slack接続でエラーが発生しまし
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, async () => {
     stopping = true;
+    healthServer?.close();
     await app.stop();
     process.exit(0);
   });
@@ -114,6 +117,10 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 
 try {
   await app.start();
+  if (process.env.PORT) {
+    healthServer = await startHealthServer(process.env.PORT);
+    console.log('ヘルスチェック /healthz を公開しました。');
+  }
   console.log('Bolt起動完了。Slackで「全体のいいねランキングを見せて」と送ってください。');
 } catch {
   console.error('Slackへ接続できませんでした。トークン、Socket Mode、ネットワークを確認してください。');

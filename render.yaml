@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: iinerankingbot
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_APP_TOKEN
+        sync: false
+      - key: SLACK_ALLOWED_USER_IDS
+        sync: false
+      - key: EXCLUDE_SELF_LIKES
+        value: "true"
+      - key: INCLUDE_PRIVATE_CHANNELS
+        value: "true"
