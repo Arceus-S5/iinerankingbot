@@ -22,7 +22,7 @@ async function* pages(call, method, args, key) {
 }
 
 export async function scanWorkspace(call, {
-  excludeSelf = true, includePrivate = true, onProgress = () => {}, now = () => new Date(),
+  excludeSelf = true, includePrivate = true, reaction = '+1', onProgress = () => {}, now = () => new Date(),
 } = {}) {
   const startedAt = now().toISOString();
   // Bound the set of messages; reaction values are observed during the scan, not an atomic snapshot.
@@ -90,18 +90,18 @@ export async function scanWorkspace(call, {
       if (!isUserMessage(message)) continue;
       let count;
       try {
-        count = countLikes(message, { excludeSelf });
+        count = countLikes(message, { excludeSelf, reaction });
       } catch (error) {
         if (error.code !== 'self_unknown') throw error;
-        progress.phase = '自分の👍を再確認中';
+        progress.phase = '自分のリアクションを再確認中';
         publish();
         const response = await call('reactions.get', { channel: channel.id, timestamp: message.ts, full: true });
         if (response.type !== 'message' || response.message?.ts !== message.ts || response.message?.user !== message.user) {
-          throw new ScanError('invalid_response', '👍の再取得結果を元の投稿と照合できませんでした。');
+          throw new ScanError('invalid_response', 'リアクションの再取得結果を元の投稿と照合できませんでした。');
         }
         message = response.message;
         try {
-          count = countLikes(message, { excludeSelf });
+          count = countLikes(message, { excludeSelf, reaction });
         } catch (retryError) {
           if (retryError.code === 'self_unknown') {
             throw new ScanError('self_unknown', retryError.message, { channelId: channel.id, ts: message.ts });
@@ -119,7 +119,7 @@ export async function scanWorkspace(call, {
   }
   return {
     top: topTen(totals), totalLikes: [...totals.values()].reduce((a, b) => a + b, 0),
-    startedAt, completedAt: now().toISOString(), cutoff,
+    startedAt, completedAt: now().toISOString(), cutoff, reaction,
     channels: uniqueChannels.map(c => ({ id: c.id, isPrivate: !!c.is_private, archived: !!c.is_archived })),
     messages: progress.messages, threads: progress.threads, excludeSelf, includePrivate, skippedChannels,
   };

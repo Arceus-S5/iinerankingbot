@@ -3,7 +3,8 @@ import { loadConfig, canUseBot } from './config.js';
 import { createApi, slackErrorCode } from './api.js';
 import { scanWorkspace } from './scanner.js';
 import { formatFailure, formatProgress, formatRanking } from './format.js';
-import { rankingRequest } from './ranking.js';
+import { rankingRequest, parseReactionRequest } from './ranking.js';
+import { addDisplayNames } from './display-names.js';
 import { startHealthServer } from './health.js';
 
 const { App, LogLevel } = bolt;
@@ -25,7 +26,7 @@ let running;
 let stopping = false;
 let healthServer;
 
-async function runRanking({ userId, channelId, announce, reply, preflightReply = reply }) {
+async function runRanking({ userId, channelId, reaction = '+1', announce, reply, preflightReply = reply, onStart = async () => {} }) {
   if (!canUseBot(config, userId)) {
     await announce('このBotの利用者に登録されていません。管理者に確認してください。');
     return;
@@ -38,7 +39,7 @@ async function runRanking({ userId, channelId, announce, reply, preflightReply =
   const job = { progress: undefined };
   running = job;
   try {
-    await announce('👍の集計を始めます。完了後、このチャンネルの全員にTop 10を表示します。');
+    await onStart();
     // Verify delivery is possible before doing a long scan (no response_url timeout dependency).
     const destination = await call('conversations.info', { channel: channelId });
     if (!destination.channel?.is_member) {
@@ -46,11 +47,13 @@ async function runRanking({ userId, channelId, announce, reply, preflightReply =
       return;
     }
     const result = await scanWorkspace(call, {
-      excludeSelf: config.excludeSelf, includePrivate: config.includePrivate,
+      excludeSelf: config.excludeSelf, includePrivate: config.includePrivate, reaction,
       onProgress: progress => { job.progress = progress; },
     });
+    result.top = await addDisplayNames(call, result.top);
     await app.client.chat.postMessage({
-      channel: channelId, text: formatRanking(result), unfurl_links: false, unfurl_media: false,
+      channel: channelId, text: formatRanking(result), parse: 'none', link_names: false,
+      unfurl_links: false, unfurl_media: false,
     });
     console.log(`集計完了：${result.channels.length}チャンネル、${result.messages}投稿。`);
   } catch (error) {
@@ -76,7 +79,9 @@ function ephemeralReply(channel, user, threadTs) {
 app.message(rankingRequest, async ({ message }) => {
   if (!message.user || message.bot_id || (message.subtype && message.subtype !== 'thread_broadcast')) return;
   const reply = ephemeralReply(message.channel, message.user, message.thread_ts);
-  await runRanking({ userId: message.user, channelId: message.channel, announce: reply, reply });
+  const reaction = parseReactionRequest(message.text);
+  if (!reaction) return;
+  await runRanking({ userId: message.user, channelId: message.channel, reaction, announce: reply, reply });
 });
 
 // Also keep a slash command for status/help and environments where commands are preferred.
@@ -88,19 +93,20 @@ app.command('/like-top', async ({ command, ack, respond }) => {
   }
   const action = command.text.trim();
   if (action === 'help') {
-    await acknowledge('「全体のいいねランキングを見せて」で人別Top 10を再集計し、チャンネル全員に表示します。\n/like-top でも開始できます。/like-top status で進行状況を確認できます。');
+    await acknowledge('「全体の:+1:のランキングを見せて」のようにリアクションを指定してください。表示名でTop 10を全員に表示します。/like-top :heart: も使えます。');
     return;
   }
   if (action === 'status') {
     await acknowledge(running ? formatProgress(running.progress) : '現在は集計していません。「全体のいいねランキングを見せて」で集計できます。');
     return;
   }
-  if (action) {
-    await acknowledge('/like-top または /like-top status を使ってください。');
+  const reaction = action ? parseReactionRequest(`全体の${action}のランキングを見せて`) : '+1';
+  if (!reaction) {
+    await acknowledge('/like-top :heart: のようにリアクションを指定してください。');
     return;
   }
   await runRanking({
-    userId: command.user_id, channelId: command.channel_id, announce: acknowledge,
+    userId: command.user_id, channelId: command.channel_id, reaction, announce: acknowledge, onStart: () => ack(),
     reply: ephemeralReply(command.channel_id, command.user_id),
     preflightReply: text => respond({ response_type: 'ephemeral', text }),
   });

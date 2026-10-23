@@ -2,12 +2,14 @@ import { ScanError } from './ranking.js';
 import { slackErrorCode } from './api.js';
 
 const number = value => value.toLocaleString('ja-JP');
+const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
 export function formatRanking(result) {
-  const rows = result.top.map((row, i) => `${i + 1}. <@${row.userId}>　*${number(row.count)}* 👍`);
+  const reaction = result.reaction ?? '+1';
+  const rows = result.top.map((row, i) => `${i + 1}位 ${escape(row.displayName ?? '名前未設定')}　*${number(row.count)}個*`);
   return [
-    '*受け取ったいいね Top 10*',
-    rows.length ? rows.join('\n') : '対象の投稿に👍はありませんでした。',
+    `*受け取った${reaction === '+1' ? 'いいね' : ''}:${escape(reaction)}: Top 10*`,
+    rows.length ? rows.join('\n') : '対象のリアクションはありませんでした。',
   ].join('\n');
 }
 
@@ -15,7 +17,7 @@ export function formatFailure(error) {
   const prefix = '集計を完了できなかったため、Top 10は表示しません。\n';
   if (error instanceof ScanError) {
     if (error.code === 'self_unknown') {
-      return `${prefix}押した人の一覧がSlack APIで省略され、自分への👍を判定できない投稿がありました。\n推測して引き算することはしていません。現在の公式APIでは、この条件の過去分を必ず正確に復元することはできません。`;
+      return `${prefix}押した人の一覧がSlack APIで省略され、自分へのリアクションを判定できない投稿がありました。\n推測して引き算することはしていません。現在の公式APIでは、この条件の過去分を必ず正確に復元することはできません。`;
     }
     return prefix + error.message;
   }

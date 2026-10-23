@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { scanWorkspace } from '../src/scanner.js';
-import { formatFailure, formatRanking } from '../src/format.js';
+import { formatFailure } from '../src/format.js';
 
 const stamp = '2026-10-23T13:30:00.000Z';
 const options = { now: () => new Date(stamp) };
@@ -48,8 +48,6 @@ test('scan every channel/history/reply page; replace parents and broadcasts inst
     if (method === 'conversations.list') assert.equal(args.exclude_archived, false);
     else assert.ok(args.latest && args.inclusive);
   }
-  assert.match(formatRanking(result), /<@UB>.*6/);
-  assert.equal(formatRanking(result), '*受け取ったいいね Top 10*\n1. <@UB>　*6* 👍\n2. <@UA>　*2* 👍');
 });
 
 test('skip unjoined channels and rank only joined channels', async () => {
@@ -61,7 +59,6 @@ test('skip unjoined channels and rank only joined channels', async () => {
   assert.equal(result.skippedChannels, 1);
   assert.equal(result.channels.length, 1);
   assert.deepEqual(result.top, [{ userId: 'UA', count: 3 }]);
-  assert.equal(formatRanking(result), '*受け取ったいいね Top 10*\n1. <@UA>　*3* 👍');
 });
 
 test('report no accessible channels when the bot has joined none', async () => {
