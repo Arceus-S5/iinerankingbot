@@ -13,7 +13,8 @@ export function formatRanking(result) {
     '*👍 受け取ったいいね Top 10*',
     rows.length ? rows.join('\n') : '対象の投稿に👍はありませんでした。',
     '',
-    `集計対象：Botが参照できる${result.includePrivate ? '公開・非公開' : '公開'}チャンネル ${number(result.channels.length)}件（アーカイブ含む・DM除外）`,
+    `集計対象：Botが参加している${result.includePrivate ? '公開・非公開' : '公開'}チャンネル ${number(result.channels.length)}件（アーカイブ含む・DM除外）`,
+    `未参加のため除外したチャンネル：${number(result.skippedChannels ?? 0)}件`,
     `確認した投稿：${number(result.messages)}件／👍合計：${number(result.totalLikes)}`,
     `自分で押した👍：${result.excludeSelf ? '除外' : '含む'}／肌色違いを含む👍の表示件数を合計`,
     `取得：${date(result.startedAt)} 〜 ${date(result.completedAt)} JST`,
@@ -25,10 +26,6 @@ export function formatRanking(result) {
 export function formatFailure(error) {
   const prefix = '集計を完了できなかったため、Top 10は表示しません。\n';
   if (error instanceof ScanError) {
-    if (error.code === 'missing_channels') {
-      const ids = error.details.channelIds.slice(0, 8).map(id => `<#${id}>`).join('、');
-      return `${prefix}Bot未参加のチャンネルが${error.details.count}件あります：${ids}\n対象すべてにBotを招待してから再実行してください。アーカイブ済みチャンネルは管理者に参加方法を確認してください。`;
-    }
     if (error.code === 'self_unknown') {
       return `${prefix}押した人の一覧がSlack APIで省略され、自分への👍を判定できない投稿がありました。\n推測して引き算することはしていません。現在の公式APIでは、この条件の過去分を必ず正確に復元することはできません。`;
     }

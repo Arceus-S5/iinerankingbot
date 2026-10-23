@@ -52,14 +52,20 @@ test('scan every channel/history/reply page; replace parents and broadcasts inst
   assert.match(formatRanking(result), /同一瞬間/);
 });
 
-test('unjoined public channels abort before returning any partial ranking', async () => {
-  let requests = 0;
-  await assert.rejects(scanWorkspace(async method => {
-    requests++;
-    assert.equal(method, 'conversations.list');
-    return { ok: true, channels: [{ ...channel, is_member: false }] };
-  }, options), { code: 'missing_channels' });
-  assert.equal(requests, 1);
+test('skip unjoined channels and rank only joined channels', async () => {
+  const result = await scanWorkspace(async (method, args) => {
+    if (method === 'conversations.list') return { ok: true, channels: [channel, { ...channel, id: 'CSKIP', is_member: false }] };
+    assert.equal(args.channel, 'CONE');
+    return { ok: true, messages: [msg('1.000000', 'UA', 3)] };
+  }, options);
+  assert.equal(result.skippedChannels, 1);
+  assert.equal(result.channels.length, 1);
+  assert.deepEqual(result.top, [{ userId: 'UA', count: 3 }]);
+  assert.match(formatRanking(result), /未参加のため除外したチャンネル：1件/);
+});
+
+test('report no accessible channels when the bot has joined none', async () => {
+  await assert.rejects(scanWorkspace(async () => ({ ok: true, channels: [{ ...channel, is_member: false }] }), options), { code: 'no_channels' });
 });
 
 test('retry ambiguous self-likes with reactions.get(full=true)', async () => {

@@ -39,13 +39,9 @@ export async function scanWorkspace(call, {
       channels.push(channel);
     }
   }
-  const uniqueChannels = [...new Map(channels.map(c => [c.id, c])).values()];
-  const missing = uniqueChannels.filter(c => !c.is_member);
-  if (missing.length) {
-    throw new ScanError('missing_channels', 'Bot未参加のチャンネルがあります。全体の順位として表示できません。', {
-      channelIds: missing.map(c => c.id), count: missing.length,
-    });
-  }
+  const visibleChannels = [...new Map(channels.map(c => [c.id, c])).values()];
+  const skippedChannels = visibleChannels.filter(c => !c.is_member).length;
+  const uniqueChannels = visibleChannels.filter(c => c.is_member);
   if (!uniqueChannels.length) throw new ScanError('no_channels', '集計できるチャンネルがありません。Botを招待してください。');
 
   const totals = new Map();
@@ -125,6 +121,6 @@ export async function scanWorkspace(call, {
     top: topTen(totals), totalLikes: [...totals.values()].reduce((a, b) => a + b, 0),
     startedAt, completedAt: now().toISOString(), cutoff,
     channels: uniqueChannels.map(c => ({ id: c.id, isPrivate: !!c.is_private, archived: !!c.is_archived })),
-    messages: progress.messages, threads: progress.threads, excludeSelf, includePrivate,
+    messages: progress.messages, threads: progress.threads, excludeSelf, includePrivate, skippedChannels,
   };
 }
