@@ -38,7 +38,7 @@ async function runRanking({ userId, channelId, announce, reply, preflightReply =
   const job = { progress: undefined };
   running = job;
   try {
-    await announce('👍の集計を始めます。履歴の量によって時間がかかります。完了後、このチャンネルであなただけに結果を表示します。進行状況は /like-top status で確認できます。');
+    await announce('👍の集計を始めます。完了後、このチャンネルの全員にTop 10を表示します。');
     // Verify delivery is possible before doing a long scan (no response_url timeout dependency).
     const destination = await call('conversations.info', { channel: channelId });
     if (!destination.channel?.is_member) {
@@ -49,7 +49,9 @@ async function runRanking({ userId, channelId, announce, reply, preflightReply =
       excludeSelf: config.excludeSelf, includePrivate: config.includePrivate,
       onProgress: progress => { job.progress = progress; },
     });
-    await reply(formatRanking(result));
+    await app.client.chat.postMessage({
+      channel: channelId, text: formatRanking(result), unfurl_links: false, unfurl_media: false,
+    });
     console.log(`集計完了：${result.channels.length}チャンネル、${result.messages}投稿。`);
   } catch (error) {
     // Do not log raw Slack payloads, response URLs, tokens, or message bodies.
@@ -86,7 +88,7 @@ app.command('/like-top', async ({ command, ack, respond }) => {
   }
   const action = command.text.trim();
   if (action === 'help') {
-    await acknowledge('「全体のいいねランキングを見せて」で人別Top 10を再集計します。\n/like-top でも開始できます。/like-top status で進行状況。\n対象はBotが取得できるチャンネルの保存済み履歴です。結果は実行者だけに表示します。');
+    await acknowledge('「全体のいいねランキングを見せて」で人別Top 10を再集計し、チャンネル全員に表示します。\n/like-top でも開始できます。/like-top status で進行状況を確認できます。');
     return;
   }
   if (action === 'status') {

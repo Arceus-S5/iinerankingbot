@@ -2,24 +2,12 @@ import { ScanError } from './ranking.js';
 import { slackErrorCode } from './api.js';
 
 const number = value => value.toLocaleString('ja-JP');
-const date = value => new Intl.DateTimeFormat('ja-JP', {
-  timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
-  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
-}).format(new Date(value));
 
 export function formatRanking(result) {
   const rows = result.top.map((row, i) => `${i + 1}. <@${row.userId}>　*${number(row.count)}* 👍`);
   return [
-    '*👍 受け取ったいいね Top 10*',
+    '*受け取ったいいね Top 10*',
     rows.length ? rows.join('\n') : '対象の投稿に👍はありませんでした。',
-    '',
-    `集計対象：Botが参加している${result.includePrivate ? '公開・非公開' : '公開'}チャンネル ${number(result.channels.length)}件（アーカイブ含む・DM除外）`,
-    `未参加のため除外したチャンネル：${number(result.skippedChannels ?? 0)}件`,
-    `確認した投稿：${number(result.messages)}件／👍合計：${number(result.totalLikes)}`,
-    `自分で押した👍：${result.excludeSelf ? '除外' : '含む'}／肌色違いを含む👍の表示件数を合計`,
-    `取得：${date(result.startedAt)} 〜 ${date(result.completedAt)} JST`,
-    '開始時刻以前の投稿に、取得中の各時点で付いていた👍を集計。同数はメンバーID順で最大10人。',
-    'Botに見えない非公開チャンネル・削除済み／保存期間外の投稿は含みません。ワークスペースの全投稿や同一瞬間の総数を保証する結果ではありません。',
   ].join('\n');
 }
 

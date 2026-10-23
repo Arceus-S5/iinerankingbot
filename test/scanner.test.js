@@ -49,7 +49,7 @@ test('scan every channel/history/reply page; replace parents and broadcasts inst
     else assert.ok(args.latest && args.inclusive);
   }
   assert.match(formatRanking(result), /<@UB>.*6/);
-  assert.match(formatRanking(result), /同一瞬間/);
+  assert.equal(formatRanking(result), '*受け取ったいいね Top 10*\n1. <@UB>　*6* 👍\n2. <@UA>　*2* 👍');
 });
 
 test('skip unjoined channels and rank only joined channels', async () => {
@@ -61,7 +61,7 @@ test('skip unjoined channels and rank only joined channels', async () => {
   assert.equal(result.skippedChannels, 1);
   assert.equal(result.channels.length, 1);
   assert.deepEqual(result.top, [{ userId: 'UA', count: 3 }]);
-  assert.match(formatRanking(result), /未参加のため除外したチャンネル：1件/);
+  assert.equal(formatRanking(result), '*受け取ったいいね Top 10*\n1. <@UA>　*3* 👍');
 });
 
 test('report no accessible channels when the bot has joined none', async () => {
