@@ -1,0 +1,28 @@
+{
+  "display_information": {
+    "name": "いいね Top10",
+    "description": "取得可能なチャンネルの現在の👍を集計し、人別Top10を表示します",
+    "background_color": "#274B65"
+  },
+  "features": {
+    "bot_user": { "display_name": "いいね Top10", "always_online": false },
+    "slash_commands": [{
+      "command": "/like-top",
+      "description": "受け取った👍の合計でTop10を集計します",
+      "usage_hint": "[status | help]",
+      "should_escape": false
+    }]
+  },
+  "oauth_config": {
+    "scopes": { "bot": [
+      "commands", "chat:write", "channels:read", "channels:history",
+      "groups:read", "groups:history", "reactions:read"
+    ] }
+  },
+  "settings": {
+    "socket_mode_enabled": true,
+    "org_deploy_enabled": false,
+    "token_rotation_enabled": false,
+    "event_subscriptions": { "bot_events": ["message.channels", "message.groups"] }
+  }
+}
