@@ -41,6 +41,12 @@ slack run --app A0CBQ8FT3ND --team T0CBL7S7MM4
 
 `slack run`は実行している端末上で動作します。24時間稼働には常時起動するサーバーが必要です。
 
+## Herokuで常駐
+
+[Heroku学生特典](https://www.heroku.com/github-students/signup)の適用を確認してから、[Herokuへ配置](https://heroku.com/deploy?template=https://github.com/Arceus-S5/iinerankingbot)を開きます。トークン2つと利用者のメンバーIDを入力してください。
+
+Basicのworkerを1台起動します（月7米ドル・学生クレジット適用対象）。Webサーバー・DBの追加は不要です。トークンはHerokuの設定画面に入力します。
+
 ## 集計範囲
 
 Botが取得できる公開・非公開チャンネルの履歴とスレッドを集計します。アーカイブ済みチャンネルも対象です。DM、Botに見えない非公開チャンネル、削除済み・保存期間外の投稿は含みません。

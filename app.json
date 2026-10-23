@@ -1,0 +1,31 @@
+{
+  "name": "iinerankingbot",
+  "description": "いいね数の上位10人を表示するSlack Botです。",
+  "repository": "https://github.com/Arceus-S5/iinerankingbot",
+  "stack": "heroku-24",
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "formation": { "worker": { "quantity": 1, "size": "basic" } },
+  "addons": [],
+  "env": {
+    "SLACK_BOT_TOKEN": {
+      "description": "SlackのBot User OAuth Token（xoxb-）。",
+      "required": true
+    },
+    "SLACK_APP_TOKEN": {
+      "description": "connections:writeを付けたApp-Level Token（xapp-）。",
+      "required": true
+    },
+    "SLACK_ALLOWED_USER_IDS": {
+      "description": "利用者のSlackメンバーID。複数の場合はカンマ区切り。",
+      "required": true
+    },
+    "EXCLUDE_SELF_LIKES": {
+      "description": "自分の投稿に自分で押した👍を除外します。",
+      "value": "true"
+    },
+    "INCLUDE_PRIVATE_CHANNELS": {
+      "description": "Botが参加している非公開チャンネルも集計します。",
+      "value": "true"
+    }
+  }
+}
