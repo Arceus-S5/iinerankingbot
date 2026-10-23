@@ -21,7 +21,7 @@ Node.js 22以上が必要です。
 3. `.env.example`を`.env`にコピーし、以下を設定します。
    - `SLACK_BOT_TOKEN`：Bot Token（`xoxb-`）
    - `SLACK_APP_TOKEN`：App Token（`xapp-`）
-   - `SLACK_ALLOWED_USER_IDS`：利用者のメンバーID（複数の場合はカンマ区切り）
+   - `SLACK_ALLOWED_USER_IDS`：`*`で全員利用可能。限定する場合はメンバーIDをカンマ区切り
 4. 集計対象の全チャンネルにBotを招待します。
 
 ## 起動
@@ -45,7 +45,7 @@ slack run --app A0CBQ8FT3ND --team T0CBL7S7MM4
 
 1. Renderの「New → Web Service」でこのGitHubリポジトリの`main`を選びます。
 2. RuntimeはNode、Build Commandは`npm ci --omit=dev`、Start Commandは`npm start`、Instance Typeは**Free**にします。
-3. Environmentに`SLACK_BOT_TOKEN`、`SLACK_APP_TOKEN`、`SLACK_ALLOWED_USER_IDS`を設定します。`NODE_VERSION=24`も設定してください。`PORT`はRenderが自動設定します。
+3. Environmentに`SLACK_BOT_TOKEN`、`SLACK_APP_TOKEN`、`SLACK_ALLOWED_USER_IDS=*`を設定します。`NODE_VERSION=24`も設定してください。`PORT`はRenderが自動設定します。
 4. Deploy後、`https://自分のサービス.onrender.com/healthz`で`ok`が返ることを確認します。Health Check Pathも`/healthz`に設定します。
 5. [Google Apps Script](https://script.google.com/)で新しいプロジェクトを作り、`gas/keepalive.gs`を貼り付けます。`HEALTH_URL`を自分のURLに変更し、`setupKeepalive`を一度実行して権限を許可します。
 
@@ -54,6 +54,8 @@ GASが5分おきにアクセスします。GAS自体のWebアプリ公開は不�
 Blueprintを使う場合は`render.yaml`も利用できます。無料枠は月750時間をワークスペース内で共有します。再起動・スリープやGASの実行遅延はあり、完全な無停止は保証されません。`/healthz`はプロセスの応答確認用で、Slack接続や集計の正常性を保証しません。
 
 ## 集計範囲
+
+全員利用の場合、Botが取得した非公開チャンネル分を含む合計も各利用者に表示します。公開チャンネルだけに限定する場合は`INCLUDE_PRIVATE_CHANNELS=false`を設定してください。
 
 Botが取得できる公開・非公開チャンネルの履歴とスレッドを集計します。アーカイブ済みチャンネルも対象です。DM、Botに見えない非公開チャンネル、削除済み・保存期間外の投稿は含みません。
 

@@ -8,8 +8,8 @@ export function loadConfig(env = process.env) {
     throw new Error('.env の SLACK_APP_TOKEN に実際の xapp- トークンを設定してください。');
   }
   const allowedUserIds = new Set((env.SLACK_ALLOWED_USER_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean));
-  if (!allowedUserIds.size || [...allowedUserIds].some(id => !/^[UW][A-Z0-9]+$/.test(id))) {
-    throw new Error('SLACK_ALLOWED_USER_IDS に利用者のメンバーIDをカンマ区切りで設定してください。');
+  if (!allowedUserIds.size || [...allowedUserIds].some(id => id !== '*' && !/^[UW][A-Z0-9]+$/.test(id))) {
+    throw new Error('SLACK_ALLOWED_USER_IDS に *（全員）または利用者のメンバーIDを設定してください。');
   }
   function boolean(name, fallback) {
     const value = env[name]?.trim();
@@ -22,4 +22,8 @@ export function loadConfig(env = process.env) {
     excludeSelf: boolean('EXCLUDE_SELF_LIKES', true),
     includePrivate: boolean('INCLUDE_PRIVATE_CHANNELS', true),
   };
+}
+
+export function canUseBot(config, userId) {
+  return config.allowedUserIds.has('*') || config.allowedUserIds.has(userId);
 }

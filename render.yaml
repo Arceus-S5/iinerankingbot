@@ -14,7 +14,7 @@ services:
       - key: SLACK_APP_TOKEN
         sync: false
       - key: SLACK_ALLOWED_USER_IDS
-        sync: false
+        value: "*"
       - key: EXCLUDE_SELF_LIKES
         value: "true"
       - key: INCLUDE_PRIVATE_CHANNELS

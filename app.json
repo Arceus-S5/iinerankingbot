@@ -16,8 +16,8 @@
       "required": true
     },
     "SLACK_ALLOWED_USER_IDS": {
-      "description": "利用者のSlackメンバーID。複数の場合はカンマ区切り。",
-      "required": true
+      "description": "*で全員利用可能。限定する場合はメンバーIDをカンマ区切り。",
+      "value": "*"
     },
     "EXCLUDE_SELF_LIKES": {
       "description": "自分の投稿に自分で押した👍を除外します。",

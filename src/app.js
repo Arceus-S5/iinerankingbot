@@ -1,5 +1,5 @@
 import bolt from '@slack/bolt';
-import { loadConfig } from './config.js';
+import { loadConfig, canUseBot } from './config.js';
 import { createApi, slackErrorCode } from './api.js';
 import { scanWorkspace } from './scanner.js';
 import { formatFailure, formatProgress, formatRanking } from './format.js';
@@ -26,7 +26,7 @@ let stopping = false;
 let healthServer;
 
 async function runRanking({ userId, channelId, announce, reply, preflightReply = reply }) {
-  if (!config.allowedUserIds.has(userId)) {
+  if (!canUseBot(config, userId)) {
     await announce('このBotの利用者に登録されていません。管理者に確認してください。');
     return;
   }
@@ -80,7 +80,7 @@ app.message(rankingRequest, async ({ message }) => {
 // Also keep a slash command for status/help and environments where commands are preferred.
 app.command('/like-top', async ({ command, ack, respond }) => {
   const acknowledge = text => ack({ response_type: 'ephemeral', text });
-  if (!config.allowedUserIds.has(command.user_id)) {
+  if (!canUseBot(config, command.user_id)) {
     await acknowledge('このBotの利用者に登録されていません。管理者に確認してください。');
     return;
   }
