@@ -3,12 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "src/app.js",
   "description": "Bolt Socket Mode bot that scans Slack history for a current received-thumbs-up Top 10",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node --env-file=.env src/app.js",
     "test": "node --test",
     "check": "node --check src/app.js && node --check src/scanner.js && node --check src/ranking.js && node --check src/config.js && node --check src/format.js && node --check src/api.js"
   },
-  "dependencies": { "@slack/bolt": "5.1.0" }
+  "dependencies": {
+    "@slack/bolt": "5.1.0"
+  },
+  "devDependencies": {
+    "@slack/cli-hooks": "^2.0.0"
+  }
 }

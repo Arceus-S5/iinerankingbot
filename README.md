@@ -16,7 +16,7 @@ Bolt for JavaScriptのSocket Modeを使用しています。
 
 Node.js 22以上が必要です。
 
-1. `slack-manifest.json`からSlackアプリを作成し、ワークスペースにインストールします。
+1. `manifest.json`からSlackアプリを作成し、ワークスペースにインストールします。
 2. Socket Modeを有効にし、`connections:write`付きのApp Tokenを発行します。
 3. `.env.example`を`.env`にコピーし、以下を設定します。
    - `SLACK_BOT_TOKEN`：Bot Token（`xoxb-`）
@@ -30,6 +30,16 @@ Node.js 22以上が必要です。
 npm ci
 npm start
 ```
+
+Slack CLIを使う場合は、`.env`に利用者のメンバーIDを設定して、以下を実行します。認証トークンはCLIから自動で渡されます。アプリの権限・イベント設定はSlackの管理画面で管理します。
+
+```sh
+slack login
+slack app link --app A0CBQ8FT3ND --team T0CBL7S7MM4 --environment local
+slack run --app A0CBQ8FT3ND --team T0CBL7S7MM4
+```
+
+`slack run`は実行している端末上で動作します。24時間稼働には常時起動するサーバーが必要です。
 
 ## 集計範囲
 
